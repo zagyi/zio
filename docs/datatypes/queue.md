@@ -144,7 +144,6 @@ You can use `awaitShutdown` to execute an effect when the queue is shut down. Th
 ```scala mdoc:silent
 val awaitShutdown: UIO[Unit] = for {
   queue <- Queue.bounded[Int](3)
-  p <- Promise.make[Nothing, Boolean]
   f <- queue.awaitShutdown.fork
   _ <- queue.shutdown
   _ <- f.join
