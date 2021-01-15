@@ -19,6 +19,8 @@ package zio.test
 import zio.clock.Clock
 import zio.test.reflect.Reflect.EnableReflectiveInstantiation
 import zio.{Has, URIO}
+import zio.URLayer
+import zio.test.environment.TestEnvironment
 
 @EnableReflectiveInstantiation
 abstract class AbstractRunnableSpec {
@@ -29,11 +31,12 @@ abstract class AbstractRunnableSpec {
   def aspects: List[TestAspect[Nothing, Environment, Nothing, Any]]
   def runner: TestRunner[Environment, Failure]
   def spec: ZSpec[Environment, Failure]
+  def environment: URLayer[TestEnvironment, Environment]
 
   /**
    * Returns an effect that executes the spec, producing the results of the execution.
    */
-  final def run: URIO[TestLogger with Clock, ExecutedSpec[Failure]] =
+  final def run: URIO[Environment with Annotations with TestLogger with Clock, ExecutedSpec[Failure]] =
     runSpec(spec)
 
   /**
@@ -41,7 +44,7 @@ abstract class AbstractRunnableSpec {
    */
   private[zio] def runSpec(
     spec: ZSpec[Environment, Failure]
-  ): URIO[TestLogger with Clock, ExecutedSpec[Failure]] =
+  ): URIO[Environment with Annotations with TestLogger with Clock, ExecutedSpec[Failure]] =
     runner.run(aspects.foldLeft(spec)(_ @@ _))
 
   /**

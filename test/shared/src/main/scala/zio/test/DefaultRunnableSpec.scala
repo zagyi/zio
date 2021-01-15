@@ -19,7 +19,8 @@ package zio.test
 import zio.URIO
 import zio.clock.Clock
 import zio.duration._
-import zio.test.environment.TestEnvironment
+import zio.test.environment.{TestEnvironment, testEnvironment}
+import zio.URLayer
 
 /**
  * A default runnable spec that provides testable versions of all of the
@@ -33,11 +34,14 @@ abstract class DefaultRunnableSpec extends RunnableSpec[TestEnvironment, Any] {
   override def runner: TestRunner[TestEnvironment, Any] =
     defaultTestRunner
 
+  override def environment: URLayer[TestEnvironment, TestEnvironment] =
+    testEnvironment
+
   /**
    * Returns an effect that executes a given spec, producing the results of the execution.
    */
   private[zio] override def runSpec(
     spec: ZSpec[Environment, Failure]
-  ): URIO[TestLogger with Clock, ExecutedSpec[Failure]] =
+  ): URIO[Environment with Annotations with TestLogger with Clock, ExecutedSpec[Failure]] =
     runner.run(aspects.foldLeft(spec)(_ @@ _) @@ TestAspect.fibers)
 }
